@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chinese Recipes for Foreigners</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        header p {
+            color: #ddd;
+            font-size: 1.1rem;
+        }
+        .language-selector {
+            margin-top: 1.5rem;
+        }
+        .language-selector button {
+            padding: 0.6rem 1.2rem;
+            margin: 0.3rem;
+            border: none;
+            border-radius: 25px;
+            background: #e67e22;
+            color: white;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+        .language-selector button:hover, .language-selector button.active {
+            background: #d35400;
+            transform: translateY(-2px);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .recipes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+        .recipe-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .recipe-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .recipe-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+        .recipe-content {
+            padding: 1.5rem;
+        }
+        .recipe-content h2 {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        .difficulty-levels {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .level-tag {
+            padding: 0.35rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .level-tag:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .level-1 { background: #95a5a6; color: white; }
+        .level-2 { background: #3498db; color: white; }
+        .level-3 { background: #f1c40f; color: #2c3e50; }
+        .level-4 { background: #9b59b6; color: white; }
+        .level-5 { background: #e74c3c; color: white; }
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.2rem;
+        }
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.8rem; }
+            .recipes-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🍜 Chinese Recipes for Foreigners</h1>
+        <p>Learn to cook authentic Chinese dishes at any skill level!</p>
+        <div class="language-selector">
+            <button class="active" data-lang="en">English</button>
+            <button data-lang="zh">中文</button>
+            <button data-lang="ja">日本語</button>
+            <button data-lang="ko">한국어</button>
+            <button data-lang="fr">Français</button>
+            <button data-lang="es">Español</button>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="recipes-grid" id="recipes-grid">
+            <div class="loading">Loading recipes...</div>
+        </div>
+    </div>
+
+    <script>
+        let currentLang = 'en';
+        
+        const translations = {
+            en: {
+                title: "🍜 Chinese Recipes for Foreigners",
+                subtitle: "Learn to cook authentic Chinese dishes at any skill level!",
+                levels: ["Just Edible", "Tastes Good", "Aromatic", "Delicious", "Heavenly"]
+            },
+            zh: {
+                title: "🍜 给外国人的中国菜谱",
+                subtitle: "学习烹饪正宗的中国菜，适合任何技能水平！",
+                levels: ["能吃就行", "食之有味", "香气扑鼻", "色香味全", "人间绝味"]
+            },
+            ja: {
+                title: "🍜 外国人向け中国料理レシピ",
+                subtitle: "どんなスキルレベルでも本格中国料理を作れます！",
+                levels: ["食べられればOK", "美味しい", "香り豊か", "絶品", "天国の味"]
+            },
+            ko: {
+                title: "🍜 외국인을 위한 중국 요리 레시피",
+                subtitle: "어떤 실력 레벨이든 정통 중국 요리를 배울 수 있습니다!",
+                levels: ["먹을 수만 있으면 돼", "맛있어", "향기 가득", "절묘한 맛", "천국의 맛"]
+            },
+            fr: {
+                title: "🍜 Recettes Chinoises pour Étrangers",
+                subtitle: "Apprenez à cuisiner des plats chinois authentiques à tout niveau !",
+                levels: ["Juste Comestible", "Bon Goût", "Aromatique", "Délicieux", "Divin"]
+            },
+            es: {
+                title: "🍜 Recetas Chinas para Extranjeros",
+                subtitle: "¡Aprende a cocinar platos chinos auténticos en cualquier nivel!",
+                levels: ["Solo Comestible", "Sabe Bien", "Aromático", "Delicioso", "Celestial"]
+            }
+        };
+        
+        const foodEmojis = {
+            'kung-pao-chicken': '🍗',
+            'mapo-tofu': '🥘',
+            'fried-rice': '🍚',
+            'sweet-sour-pork': '🍖'
+        };
+        
+        const foodImages = {
+            'kung-pao-chicken': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=A%20delicious%20bowl%20of%20Kung%20Pao%20Chicken%2C%20classic%20Chinese%20dish%20with%20chicken%20cubes%2C%20peanuts%2C%20chili%20peppers%2C%20professional%20food%20photography%2C%20appetizing%2C%20vibrant%20colors%2C%20restaurant%20quality%2C%204K&image_size=square_hd',
+            'mapo-tofu': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=A%20steaming%20bowl%20of%20authentic%20Mapo%20Tofu%2C%20Sichuan%20style%20spicy%20dish%20with%20tofu%20and%20minced%20pork%2C%20red%20chili%20oil%2C%20green%20scallions%2C%20professional%20food%20photography%2C%20appetizing%2C%204K&image_size=square_hd',
+            'fried-rice': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=A%20beautiful%20plate%20of%20Egg%20Fried%20Rice%2C%20golden%20rice%20with%20scrambled%20eggs%2C%20green%20peas%2C%20carrots%2C%20professional%20food%20photography%2C%20appetizing%2C%20restaurant%20quality%2C%204K&image_size=square_hd',
+            'sweet-sour-pork': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=A%20plate%20of%20Sweet%20and%20Sour%20Pork%2C%20golden%20crispy%20pork%20with%20pineapple%20and%20bell%20peppers%2C%20glossy%20sauce%2C%20professional%20food%20photography%2C%20appetizing%2C%20vibrant%20colors%2C%204K&image_size=square_hd'
+        };
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('.language-selector button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.lang === lang) btn.classList.add('active');
+            });
+            
+            const t = translations[lang];
+            document.querySelector('header h1').textContent = t.title;
+            document.querySelector('header p').textContent = t.subtitle;
+            
+            loadRecipes();
+        }
+
+        async function loadRecipes() {
+            const grid = document.getElementById('recipes-grid');
+            grid.innerHTML = '<div class="loading">Loading recipes...</div>';
+            
+            try {
+                const response = await fetch('/api/recipes');
+                const recipes = await response.json();
+                
+                grid.innerHTML = '';
+                recipes.forEach(recipe => {
+                    const card = document.createElement('div');
+                    card.className = 'recipe-card';
+                    card.onclick = () => window.location.href = `recipe.html?slug=${recipe.slug}&lang=${currentLang}`;
+                    
+                    const nameKey = `name_${currentLang}`;
+                    const name = recipe[nameKey] || recipe.name_en;
+                    const imageUrl = foodImages[recipe.slug];
+                    
+                    const levelLabels = translations[currentLang].levels;
+                    
+                    card.innerHTML = `
+                        <img class="recipe-image" src="${imageUrl}" alt="${name}" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27400%27 height=%27200%27 viewBox=%270 0 400 200%27%3E%3Crect fill=%27%23f0f0f0%27 width=%27400%27 height=%27200%27/%3E%3Ctext x=%27200%27 y=%27110%27 font-family=%27Arial%27 font-size=%2760%27 text-anchor=%27middle%27 fill=%27%23999%27%3E${foodEmojis[recipe.slug] || '%F0%9F%8D%B2'}%3C/text%3E%3C/svg%3E'">
+                        <div class="recipe-content">
+                            <h2>${name}</h2>
+                            <div class="difficulty-levels">
+                                ${[1,2,3,4,5].map(l => `<span class="level-tag level-${l}" data-level="${l}">${levelLabels[l-1]}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Make level tags clickable
+                    setTimeout(() => {
+                        const levelTags = card.querySelectorAll('.level-tag');
+                        levelTags.forEach(tag => {
+                            tag.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                const level = tag.dataset.level;
+                                window.location.href = `recipe.html?slug=${recipe.slug}&lang=${currentLang}&level=${level}`;
+                            });
+                        });
+                    }, 0);
+                    grid.appendChild(card);
+                });
+            } catch (error) {
+                grid.innerHTML = '<div class="loading">Error loading recipes. Please try again later.</div>';
+                console.error(error);
+            }
+        }
+
+        document.querySelectorAll('.language-selector button').forEach(btn => {
+            btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+        });
+
+        loadRecipes();
+    </script>
+</body>
+</html>

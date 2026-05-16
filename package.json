@@ -1,0 +1,21 @@
+{
+  "name": "chinese-recipes-for-foreigners",
+  "version": "1.0.0",
+  "description": "Chinese recipes website for foreigners with multilingual support",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "init-db": "node init-db.js"
+  },
+  "dependencies": {
+    "express": "^4.22.2",
+    "sqlite3": "^5.1.7"
+  },
+  "keywords": [
+    "chinese",
+    "recipes",
+    "multilingual"
+  ],
+  "author": "",
+  "license": "MIT"
+}
