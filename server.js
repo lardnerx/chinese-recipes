@@ -1,14 +1,28 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.static('public'));
 app.use('/images', express.static('images'));
+app.use('/pdfs', express.static('pdfs'));
 
-const dbPath = path.join(__dirname, 'recipes.db');
+const dbPath = path.join(__dirname, 'recipes-new.db');
+
+function initDatabase() {
+    if (fs.existsSync(dbPath)) {
+        console.log('Database already exists');
+        return;
+    }
+    console.log('Initializing database...');
+    const initScript = require('./init-all-recipes.js');
+}
+
+initDatabase();
+
 const db = new sqlite3.Database(dbPath);
 
 app.get('/api/recipes', (req, res) => {
