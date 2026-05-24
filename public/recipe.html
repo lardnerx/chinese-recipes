@@ -375,7 +375,7 @@
             content.innerHTML = '<div class="loading">Loading recipe...</div>';
             
             try {
-                const response = await fetch(`/api/recipe/${currentSlug}`);
+                const response = await fetch(`data/recipe-${currentSlug}.json`);
                 recipeData = await response.json();
                 render();
             } catch (error) {

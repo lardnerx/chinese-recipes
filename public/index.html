@@ -283,7 +283,7 @@
             grid.innerHTML = '<div class="loading">Loading recipes...</div>';
             
             try {
-                const response = await fetch('/api/recipes');
+                const response = await fetch('data/recipes.json');
                 const recipes = await response.json();
                 
                 grid.innerHTML = '';
