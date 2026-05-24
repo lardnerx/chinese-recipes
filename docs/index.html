@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chinese Recipes for Foreigners</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        header p {
+            color: #ddd;
+            font-size: 1.1rem;
+        }
+        .language-selector {
+            margin-top: 1.5rem;
+        }
+        .language-selector button {
+            padding: 0.6rem 1.2rem;
+            margin: 0.3rem;
+            border: none;
+            border-radius: 25px;
+            background: #e67e22;
+            color: white;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+        .language-selector button:hover, .language-selector button.active {
+            background: #d35400;
+            transform: translateY(-2px);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .recipes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+        .recipe-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .recipe-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .recipe-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+        .recipe-content {
+            padding: 1.5rem;
+        }
+        .recipe-content h2 {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        .difficulty-levels {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .level-tag {
+            padding: 0.35rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .level-tag:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .level-1 { background: #95a5a6; color: white; }
+        .level-2 { background: #3498db; color: white; }
+        .level-3 { background: #f1c40f; color: #2c3e50; }
+        .level-4 { background: #9b59b6; color: white; }
+        .level-5 { background: #e74c3c; color: white; }
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.2rem;
+        }
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.8rem; }
+            .recipes-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🍜 Chinese Recipes for Foreigners</h1>
+        <p>Learn to cook authentic Chinese dishes at any skill level!</p>
+        <div class="language-selector">
+            <button class="active" data-lang="en">English</button>
+            <button data-lang="zh">中文</button>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="recipes-grid" id="recipes-grid">
+            <div class="loading">Loading recipes...</div>
+        </div>
+    </div>
+
+    <script>
+        let currentLang = 'en';
+        
+        const translations = {
+            en: {
+                title: "🍜 Chinese Recipes for Foreigners",
+                subtitle: "Learn to cook authentic Chinese dishes at any skill level!",
+                levels: ["Just Edible", "Tastes Good", "Aromatic", "Delicious", "Heavenly"]
+            },
+            zh: {
+                title: "🍜 给外国人的中国菜谱",
+                subtitle: "学习烹饪正宗的中国菜，适合任何技能水平！",
+                levels: ["能吃就行", "食之有味", "香气扑鼻", "色香味全", "人间绝味"]
+            }
+        };
+        
+        const foodEmojis = {
+        'kung-pao-chicken': '🍗',
+        'mapo-tofu': '🥘',
+        'fried-rice': '🍚',
+        'sweet-sour-pork': '🍖',
+        'red-braised-pork': '🍖',
+        'hot-pot': '🍲',
+        'peking-duck': '🦆',
+        'dumplings': '🥟',
+        'xiao-long-bao': '🥟',
+        'kung-pao-shrimp': '🦐',
+        'twice-cooked-pork': '🥓',
+        'fish-fragrant-pork': '🥩',
+        'black-bean-sauce-ribs': '🍖',
+        'steamed-fish': '🐟',
+        'shrimp-kung-bao': '🦐',
+        'sichuan-spicy-fish': '🐟',
+        'dry-pot-chicken': '🍗',
+        'yangzhou-fried-rice': '🍚',
+        'clay-pot-rice': '🍚',
+        'congee': '🥣',
+        'steamed-pork-bun': '🥟',
+        'spring-onion-pancake': '🥞',
+        'tang-yuan': '🍡',
+        'zongzi': '🍙',
+        'moon-cake': '🥮',
+        'century-egg': '🥚',
+        'stir-fried-kale': '🥬',
+        'eggplant-in-garlic-sauce': '🍆',
+        'dry-fried-green-beans': '🫘',
+        'bok-choy-garlic': '🥬',
+        'sour-spicy-soup': '🥣',
+        'wonton-soup': '🥣',
+        'egg-drop-soup': '🥣',
+        'luffa-soup': '🥣',
+        'lotus-root-soup': '🥣',
+        'sweet-red-bean-soup': '🥣',
+        'kung-pao-tofu': '🧈',
+        'braised-pork-belly': '🍖',
+        'lion-head-meatballs': '🍡',
+        'sweet-potato-soup': '🥣',
+        'spicy-tofu-salad': '🧈',
+        'cold-cucumber-salad': '🥒',
+        'spicy-chicken-feet': '🍗',
+        'sugar-tomatoes': '🍅',
+        'cold-noodles': '🍜',
+        'fried-chicken': '🍗',
+        'scallion-oil-chicken': '🍗',
+        'white-cut-chicken': '🍗',
+        'soy-sauce-chicken': '🍗',
+        'tea-smoked-duck': '🦆',
+        'roast-pork': '🥓',
+        'white-pepper-pig-stomach': '🍖',
+        'five-flower-pork': '🥓',
+        'sweet-sour-ribs': '🍖'
+    };
+        
+        const foodImages = {
+            'kung-pao-chicken': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=A%20delicious%20bowl%20of%20Kung%20Pao%20Chicken%2C%20classic%20Chinese%20dish%20with%20chicken%20cubes%2C%20peanuts%2C%20chili%20peppers%2C%20professional%20food%20photography%2C%20appetizing%2C%20vibrant%20colors%2C%20restaurant%20quality%2C%204K&image_size=square_hd',
+            'mapo-tofu': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=A%20steaming%20bowl%20of%20authentic%20Mapo%20Tofu%2C%20Sichuan%20style%20spicy%20dish%20with%20tofu%20and%20minced%20pork%2C%20red%20chili%20oil%2C%20green%20scallions%2C%20professional%20food%20photography%2C%20appetizing%2C%204K&image_size=square_hd',
+            'fried-rice': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=A%20beautiful%20plate%20of%20Egg%20Fried%20Rice%2C%20golden%20rice%20with%20scrambled%20eggs%2C%20green%20peas%2C%20carrots%2C%20professional%20food%20photography%2C%20appetizing%2C%20restaurant%20quality%2C%204K&image_size=square_hd',
+            'sweet-sour-pork': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=A%20plate%20of%20Sweet%20and%20Sour%20Pork%2C%20golden%20crispy%20pork%20with%20pineapple%20and%20bell%20peppers%2C%20glossy%20sauce%2C%20professional%20food%20photography%2C%20appetizing%2C%20vibrant%20colors%2C%204K&image_size=square_hd',
+            'red-braised-pork': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=A%20bowl%20of%20glossy%20red%20braised%20pork%20belly%2C%20classic%20Chinese%20dish%2C%20deep%20red%20color%2C%20tender%20meat%2C%20steaming%20hot%2C%20professional%20food%20photography%2C%204K&image_size=square_hd',
+            'hot-pot': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=A%20vibrant%20Chinese%20hot%20pot%20with%20spicy%20red%20broth%2C%20various%20ingredients%2C%20steam%20rising%2C%20restaurant%20style%2C%20professional%20food%20photography%2C%204K&image_size=square_hd',
+            'peking-duck': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Crispy%20Peking%20duck%20with%20thin%20pancakes%2C%20scallions%2C%20sweet%20bean%20sauce%2C%20authentic%20Chinese%20cuisine%2C%20restaurant%20quality%2C%204K&image_size=square_hd',
+            'dumplings': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=A%20platter%20of%20fresh%20Chinese%20pork%20dumplings%2C%20steaming%20hot%2C%20golden%20brown%20pan-fried%2C%20with%20vinegar%20dip%2C%204K&image_size=square_hd',
+            'xiao-long-bao': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Delicate%20soup%20dumplings%20Xiaolongbao%20in%20bamboo%20steamer%2C%20shanghai%20style%2C%20juicy%20pork%20filling%2C%20professional%204K&image_size=square_hd',
+            'kung-pao-shrimp': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=A%20plate%20of%20Kung%20Pao%20Shrimp%20with%20peanuts%2C%20chilies%2C%20scallions%2C%20stir-fried%2C%20vibrant%20colors%2C%20professional%204K&image_size=square_hd',
+            'twice-cooked-pork': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Authentic%20Sichuan%20twice%20cooked%20pork%20with%20green%20peppers%2C%20garlic%20sprouts%2C%20red%20chilies%2C%20professional%204K&image_size=square_hd',
+            'fish-fragrant-pork': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Yuxiang%20rousi%20fish%20fragrant%20pork%20shreds%20with%20wood%20ear%20mushrooms%2C%20colorful%2C%20professional%204K&image_size=square_hd',
+            'black-bean-sauce-ribs': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Steamed%20pork%20ribs%20in%20black%20bean%20sauce%2C%20Cantonese%20dim%20sum%20style%2C%20steaming%20hot%2C%204K&image_size=square_hd',
+            'steamed-fish': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Whole%20steamed%20fish%20with%20ginger%20and%20scallions%2C%20soy%20sauce%2C%20hot%20oil%2C%20classic%20Chinese%2C%204K&image_size=square_hd',
+            'shrimp-kung-bao': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Braised%20large%20shrimp%20in%20rich%20sauce%2C%20Chinese%20style%2C%20glossy%2C%20appetizing%2C%20professional%204K&image_size=square_hd',
+            'sichuan-spicy-fish': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Sichuan%20Shui%20Zhu%20Yu%20spicy%20boiled%20fish%20in%20fiery%20red%20chili%20oil%2C%20numbs%20the%20mouth%2C%204K&image_size=square_hd',
+            'dry-pot-chicken': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20dry%20pot%20chicken%20with%20potatoes%20peppers%20in%20wok%2C%20spicy%2C%20sizzling%2C%20professional%204K&image_size=square_hd',
+            'yangzhou-fried-rice': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Yangzhou%20fried%20rice%20with%20shrimp%2C%20ham%2C%20peas%2C%20carrots%2C%20eggs%2C%20colorful%20grain%2C%204K&image_size=square_hd',
+            'clay-pot-rice': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Cantonese%20clay%20pot%20rice%20with%20sausages%20chicken%20mushrooms%2C%20crispy%20bottom%2C%20steaming%2C%204K&image_size=square_hd',
+            'congee': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Creamy%20rice%20congee%20porridge%20with%20century%20egg%20and%20pork%2C%20comfort%20food%2C%204K&image_size=square_hd',
+            'steamed-pork-bun': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Steamed%20pork%20buns%20Baozi%20in%20bamboo%20steamer%2C%20soft%20fluffy%2C%20juicy%20filling%2C%204K&image_size=square_hd',
+            'spring-onion-pancake': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Golden%20flaky%20Chinese%20spring%20onion%20pancakes%20Cong%20You%20Bing%2C%20crispy%2C%204K&image_size=square_hd',
+            'tang-yuan': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Sweet%20glutinous%20rice%20balls%20Tangyuan%20in%20warm%20soup%2C%20black%20sesame%20filling%2C%204K&image_size=square_hd',
+            'zongzi': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Traditional%20Chinese%20rice%20dumplings%20Zongzi%20wrapped%20in%20bamboo%20leaves%2C%20Dragon%20Boat%20Festival%2C%204K&image_size=square_hd',
+            'moon-cake': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Golden%20Chinese%20mooncakes%20for%20Mid-Autumn%20Festival%2C%20lotus%20seed%20paste%20egg%20yolk%2C%204K&image_size=square_hd',
+            'century-egg': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Century%20eggs%20preserved%20duck%20eggs%20sliced%2C%20dark%20translucent%2C%20unique%20Chinese%2C%204K&image_size=square_hd',
+            'stir-fried-kale': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Stir-fried%20Chinese%20greens%20with%20garlic%2C%20vibrant%20green%2C%20healthy%2C%20professional%204K&image_size=square_hd',
+            'eggplant-in-garlic-sauce': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Yu%20Xiang%20Qiezi%20fish%20fragrant%20eggplant%20with%20garlic%20sauce%2C%20glossy%2C%204K&image_size=square_hd',
+            'dry-fried-green-beans': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Sichuan%20dry%20fried%20green%20beans%20with%20minced%20pork%20and%20preserved%20vegetables%2C%204K&image_size=square_hd',
+            'bok-choy-garlic': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Stir-fried%20bok%20choy%20with%20garlic%2C%20fresh%20green%2C%20simple%20healthy%2C%204K&image_size=square_hd',
+            'sour-spicy-soup': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Hot%20and%20sour%20soup%20with%20tofu%20eggs%20mushrooms%2C%20Chinese%20classic%2C%204K&image_size=square_hd',
+            'wonton-soup': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Wonton%20soup%20with%20pork%20dumplings%20and%20noodles%2C%20clear%20broth%2C%204K&image_size=square_hd',
+            'egg-drop-soup': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Light%20egg%20drop%20soup%20with%20silky%20egg%20ribbons%2C%20comforting%20Chinese%20soup%2C%204K&image_size=square_hd',
+            'luffa-soup': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Luffa%20sponge%20gourd%20soup%20with%20eggs%2C%20light%20and%20healthy%2C%204K&image_size=square_hd',
+            'lotus-root-soup': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Sweet%20lotus%20root%20soup%20with%20peanuts%20and%20pork%20ribs%2C%20traditional%2C%204K&image_size=square_hd',
+            'sweet-red-bean-soup': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Sweet%20red%20bean%20soup%20Hongdou%20Tang%2C%20warm%20comforting%2C%204K&image_size=square_hd',
+            'kung-pao-tofu': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Kung%20Pao%20Tofu%20vegetarian%20version%20with%20peanuts%2C%20chilies%2C%20spicy%2C%204K&image_size=square_hd',
+            'braised-pork-belly': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Dongpo%20pork%20braised%20pork%20belly%2C%20glossy%20tender%2C%20Chinese%20classic%2C%204K&image_size=square_hd',
+            'lion-head-meatballs': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Shizi%20tou%20lion%20head%20meatballs%20in%20clear%20broth%20with%20cabbage%2C%204K&image_size=square_hd',
+            'sweet-potato-soup': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Sweet%20potato%20soup%20dessert%2C%20warm%20orange%2C%20simple%20and%20delicious%2C%204K&image_size=square_hd',
+            'spicy-tofu-salad': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Century%20egg%20and%20tofu%20salad%20with%20chili%20oil%2C%20cold%20dish%2C%204K&image_size=square_hd',
+            'cold-cucumber-salad': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20smashed%20cucumber%20salad%20Pai%20Huang%20Gua%20with%20garlic%20and%20chili%2C%204K&image_size=square_hd',
+            'spicy-chicken-feet': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Spicy%20pickled%20chicken%20feet%20Phoenix%20claws%20sichuan%20style%2C%20appetizer%2C%204K&image_size=square_hd',
+            'sugar-tomatoes': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Sugar%20tomatoes%20Xihongshi%20Tang%2C%20sliced%20ripe%20tomatoes%20with%20sugar%2C%20simple%20dessert%2C%204K&image_size=square_hd',
+            'cold-noodles': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Chinese%20cold%20noodles%20with%20sesame%20sauce%2C%20cucumber%2C%20refreshing%2C%204K&image_size=square_hd',
+            'fried-chicken': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Crispy%20Chinese%20style%20fried%20chicken%2C%20golden%20brown%2C%20juicy%20inside%2C%204K&image_size=square_hd',
+            'scallion-oil-chicken': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Scallion%20oil%20chicken%20with%20fragrant%20green%20onion%20oil%2C%20tender%20white%20meat%2C%204K&image_size=square_hd',
+            'white-cut-chicken': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=White%20cut%20chicken%20plain%20boiled%20with%20ginger%20scallion%20dip%2C%20Cantonese%2C%204K&image_size=square_hd',
+            'soy-sauce-chicken': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Soy%20sauce%20chicken%20Lu%20Ji%20glossy%20brown%20braised%2C%20tender%2C%204K&image_size=square_hd',
+            'tea-smoked-duck': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Zhangcha%20duck%20tea%20smoked%20duck%2C%20aromatic%20Sichuan%20style%2C%204K&image_size=square_hd',
+            'roast-pork': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Char%20Siu%20Cantonese%20barbecue%20pork%2C%20glossy%20red%2C%20sweet%20tender%2C%204K&image_size=square_hd',
+            'white-pepper-pig-stomach': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Pork%20stomach%20soup%20with%20white%20pepper%2C%20warm%20comforting%2C%204K&image_size=square_hd',
+            'five-flower-pork': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Mei%20Cai%20Kou%20Rou%20pork%20with%20preserved%20mustard%20greens%2C%20steamed%2C%204K&image_size=square_hd',
+            'sweet-sour-ribs': 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Sweet%20and%20sour%20spare%20ribs%2C%20glossy%20red%20sauce%2C%20tender%2C%204K&image_size=square_hd'
+        };
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('.language-selector button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.lang === lang) btn.classList.add('active');
+            });
+            
+            const t = translations[lang];
+            document.querySelector('header h1').textContent = t.title;
+            document.querySelector('header p').textContent = t.subtitle;
+            
+            loadRecipes();
+        }
+
+        async function loadRecipes() {
+            const grid = document.getElementById('recipes-grid');
+            grid.innerHTML = '<div class="loading">Loading recipes...</div>';
+            
+            try {
+                const response = await fetch('data/recipes.json');
+                const recipes = await response.json();
+                
+                grid.innerHTML = '';
+                recipes.forEach(recipe => {
+                    const card = document.createElement('div');
+                    card.className = 'recipe-card';
+                    card.onclick = () => window.location.href = `recipe.html?slug=${recipe.slug}&lang=${currentLang}`;
+                    
+                    const nameKey = `name_${currentLang}`;
+                    const name = recipe[nameKey] || recipe.name_en;
+                    const imageUrl = foodImages[recipe.slug];
+                    
+                    const levelLabels = translations[currentLang].levels;
+                    
+                    card.innerHTML = `
+                        <img class="recipe-image" src="${imageUrl}" alt="${name}" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27400%27 height=%27200%27 viewBox=%270 0 400 200%27%3E%3Crect fill=%27%23f0f0f0%27 width=%27400%27 height=%27200%27/%3E%3Ctext x=%27200%27 y=%27110%27 font-family=%27Arial%27 font-size=%2760%27 text-anchor=%27middle%27 fill=%27%23999%27%3E${foodEmojis[recipe.slug] || '%F0%9F%8D%B2'}%3C/text%3E%3C/svg%3E'">
+                        <div class="recipe-content">
+                            <h2>${name}</h2>
+                            <div class="difficulty-levels">
+                                ${[1,2,3,4,5].map(l => `<span class="level-tag level-${l}" data-level="${l}">${levelLabels[l-1]}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Make level tags clickable
+                    setTimeout(() => {
+                        const levelTags = card.querySelectorAll('.level-tag');
+                        levelTags.forEach(tag => {
+                            tag.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                const level = tag.dataset.level;
+                                window.location.href = `recipe.html?slug=${recipe.slug}&lang=${currentLang}&level=${level}`;
+                            });
+                        });
+                    }, 0);
+                    grid.appendChild(card);
+                });
+            } catch (error) {
+                grid.innerHTML = '<div class="loading">Error loading recipes. Please try again later.</div>';
+                console.error(error);
+            }
+        }
+
+        document.querySelectorAll('.language-selector button').forEach(btn => {
+            btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+        });
+
+        loadRecipes();
+    </script>
+</body>
+</html>
